@@ -1,0 +1,613 @@
+---
+title: "metstats repo"
+date: "11/06/2023"
+author: "Alireza Delfarah"
+---
+
+```{r}
+
+## These functions setup parts of the package and are typically called once per package
+use_git()
+use_testthat()
+use_github()
+use_readme_rmd()
+```
+
+```{r}
+
+library(devtools)
+
+load_all()
+roxygen2::roxygenise("/Users/delfarah/workspace/metstats")
+check()
+document()
+install()
+use_testthat()
+test()
+```
+
+```{r}
+## You will call these functions on a regular basis, as you add functions and tests or take on dependencies
+use_r("metstats")
+use_test("metstats")
+use_package("metstats")
+```
+
+```{r}
+## You will call these functions multiple times per day or per hour, during development
+load_all()
+document()
+test()
+check()
+```
+
+## R package
+```{r}
+
+library("roxygen2")
+library("devtools")
+library("usethis")
+
+create_package("/Users/delfarah/workspace/metstats")
+use_git()
+use_r("qqq")
+
+```
+
+```{r libraries}
+## load required libraries
+library(tidyverse)
+library(plyr)
+library(dplyr)
+library(pheatmap)
+library(claman)
+library(clamshell)
+library(romic)
+library(ggplot2)
+library(gridExtra)
+library(utils)
+library(data.table)
+library(scales)
+library(qvalue)
+library(googlesheets4)
+library(RCy3)
+library(htmlwidgets)
+library(rsconnect)
+library(plotly)
+```
+
+```{r experiment specific info}
+# the only chunk to change for a new dataset
+mzrolldb_file_path <- "Q0026.mzrollDB"
+experiment_number <- stringr::str_extract("20231212_Q0026_Uridine_and_4MU_rescue_shUXS1_lines", "Q\\d+")
+
+```
+
+```{r metadata}
+## get experiment gsheet id and url
+sheet_id <- clamshell::get_QQQ_experiment_sheet_id(experiment_number)
+sheet_url = paste("https://docs.google.com/spreadsheets/d/", as.character(sheet_id), sep = "")
+
+## import metadata
+metadata <- clamshell::import_QQQ_sample_sheet(pattern = experiment_number)
+```
+
+
+Click [here](`r sheet_url`) to find experimental spreadsheet and output data
+
+```{r themes}
+## plotting themes
+qc_theme <- theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
+                  panel.border = element_rect(colour = "black", fill=NA, size=1), panel.background = element_blank(), 
+                  axis.line = element_line(colour = "black", size = 0), 
+                  axis.text.x = element_text(size=13, angle = 90, colour = "black", face = "bold", vjust = 0.5), 
+                  axis.text.y = element_text(size=13,  colour = "black", face = "bold"), 
+                  axis.ticks.x = element_line(colour="black"), 
+                  axis.ticks.y = element_line(colour="black"), 
+                  axis.title.y = element_text(size=13, face = "bold", colour="black"),
+                  axis.title.x = element_text(size=13, face = "bold", colour="black"),
+                  legend.text=element_text(size=13, face = "bold"),
+                  legend.title = element_blank(),
+                  plot.title = element_text(size=13, face = "bold"),
+                  legend.position = "none")
+
+regression_theme <- theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
+                  panel.border = element_rect(colour = "black", fill=NA, size=1), panel.background = element_blank(), 
+                  axis.line = element_line(colour = "black", size = 0), 
+                  axis.text.x = element_text(size=10, colour = "black", face = "bold", vjust = 0.5), 
+                  axis.text.y = element_text(size=10,  colour = "black", face = "bold"), 
+                  axis.ticks.x = element_line(colour="black"), 
+                  axis.ticks.y = element_line(colour="black"), 
+                  axis.title.y = element_text(size=20, face = "bold", colour="black"),
+                  axis.title.x = element_text(size=20, face = "bold", colour="black"),
+                  legend.text=element_text(size=12, face = "bold"),
+                  plot.title = element_text(size=12, face = "bold"),
+                  strip.text.x = element_text(size = 9, face = "bold", margin = margin( b = 10, t = 10)))
+
+box_theme <- theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
+                  panel.border = element_rect(colour = "black", fill=NA, size=1), panel.background = element_blank(), 
+                  axis.line = element_line(colour = "black", size = 0), 
+                  axis.text.x = element_text(size=10, angle = 90, colour = "black", face = "bold", vjust = 0.5), 
+                  axis.text.y = element_text(size=10,  colour = "black", face = "bold"), 
+                  axis.ticks.x = element_line(colour="black"), 
+                  axis.ticks.y = element_line(colour="black"), 
+                  axis.title.y = element_text(size=12, face = "bold", colour="black"),
+                  axis.title.x = element_text(size=12, face = "bold", colour="black"),
+                  legend.text=element_text(size=12, face = "bold"),
+                  legend.title = element_blank(),
+                  plot.title = element_text(size=12, face = "bold"),
+                  legend.position = "none")
+
+pca_theme <- theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
+                  panel.border = element_rect(colour = "black", fill=NA, size=1), panel.background = element_blank(), 
+                  axis.line = element_line(colour = "black", size = 0.65), 
+                  axis.text.x = element_text(size=9, angle = 0, colour = "black", face = "bold"), 
+                  axis.text.y = element_text(size=9,  colour = "black", face = "bold"), 
+                  axis.ticks.x = element_line(colour="black"), 
+                  axis.ticks.y = element_line(colour="black"), 
+                  axis.title.y = element_text(size=12, face = "bold", colour="black"),
+                  axis.title.x = element_text(size=12, face = "bold", colour="black"),
+                  legend.text=element_text(size=12, face = "bold"),
+                  plot.title = element_text(size=12, face = "bold"),
+                  strip.text.x = element_text(size = 2, face = "bold"))
+```
+
+```{r impute missing values, include = FALSE, message = FALSE}
+## imputing missing values only once and generate complete dataset
+complete_data <- clamshell::qqq_generate_complete_dataset(mzrolldb_file_path, metadata)
+```
+
+```{r ids, include = FALSE, message = FALSE}
+## get features, conditions and reference conditions
+features <- complete_data %>% 
+  select(groupId, compoundName) %>%
+  distinct(groupId, .keep_all = TRUE)
+
+feature_ids <- unique(complete_data$groupId)
+condition_ids <- unique(metadata$ConditionNum)
+ref_ids <- unique(metadata$ReferenceConditionNum)
+
+## get number of samples and features
+n_samples <- length(unique(complete_data$SampleName))
+n_features <- length(unique(complete_data$compoundName))
+
+heat_width <- 0.15*n_samples + 3
+heat_height <- 0.15*n_features + 2
+
+box_width <- 10
+box_height <- box_width*n_features/4
+```
+
+# {.tabset}
+
+## PCA
+```{r pca, message = FALSE, fig.width = 7, fig.height = 5}
+## generate PCA variable names
+
+expt_info <- googlesheets4::range_read(sheet_id, range="Experiment info") %>%
+  mutate_all(as.character)
+
+colnames(expt_info) <- c("col1", "col2")
+
+expt_info <- expt_info[,1:2]
+
+expt_info <- expt_info %>%
+  filter(col2 != "NULL")
+
+pca_variables <- array(unlist(expt_info %>%
+  filter(grepl("Var", expt_info$col1)) %>%
+  select(col2)))
+
+## make PCA data in tomic structure
+PCA_tomic <- claman::process_mzroll(
+  mzrolldb_file_path,
+  only_identified = TRUE,
+  validate = FALSE,
+  method_tag = "",
+  peakgroup_labels_to_keep = "q",
+  peakgroup_labels_to_exclude = "",
+  quant_col = "peakRank") %>%
+  claman::merge_samples_tbl(
+  samples_tbl = metadata,
+  id_strings = c("SampleName"),
+  exact=FALSE) %>%
+  clamshell::qqq_impute_missing_peaks(
+    imputation_var = "log2_abundance",
+    mzrolldb_file_path = mzrolldb_file_path) %>%
+  claman::normalize_peaks(
+    normalization_method = "median polish",
+    quant_peak_varname = "log2_abundance",
+    norm_peak_varname = "median_log2_abundance")
+
+pca_plots_widget <- htmltools::tagList()
+counter = 0
+
+## plot PCA
+for (i in pca_variables) {
+  for (j in pca_variables) {
+    if (i == j) {next}
+    counter = counter + 1
+  pca_plots_widget[[counter]] <- plotly::as_widget(plotly::ggplotly(
+    PCA_tomic %>%
+    romic::add_pcs(value_var = "log2_abundance", npcs = 5, missing_val_method = "drop_samples") %>%
+    pluck("samples") %>%
+    ggplot(aes_string(x= rlang::sym(grep("PC1", colnames(.), value=TRUE)),
+                      y=rlang::sym(grep("PC2", colnames(.), value=TRUE)),
+                      color=rlang::sym(i),
+                      shape=rlang::sym(j),
+                      text = "SampleName")) +
+    geom_point() +
+    scale_shape_manual(values=seq(0,100)) +
+    pca_theme
+  ))
+  }}
+
+pca_plots_widget
+```
+
+```{r regression, message=FALSE}
+## store comparisons that have at least one imputed value
+df_imputed <- data.frame(
+  term = character(),
+  groupId = numeric(),
+  imputed = character())
+
+for (i in condition_ids) {
+  df_imputed <- rbind(df_imputed,
+                        purrr::map(feature_ids, ~qqq_imputed_comparisons(.x, i, metadata, complete_data)) %>%
+                          bind_rows() %>%
+                          filter(imputed == "yes")
+  )}
+
+df_imputed <- df_imputed %>%
+  dplyr::mutate(term_groupid = paste(term, groupId, sep = "_"))
+
+## linear regression with multiple imputation and pooling
+lm_all <- purrr::map(feature_ids, ~clamshell::qqq_lm_multi(.x, ref_ids, metadata, complete_data)) %>%
+  bind_rows() %>%
+  left_join(
+    features,
+    by = "groupId") %>%
+  relocate(groupId, .after = term) %>%
+  relocate(compoundName, .after = groupId) %>%
+  dplyr::group_by(term) %>%
+  tidyr::nest() %>%
+  dplyr::mutate(fdr_data = purrr::map(data, clamshell::qqq_fdr)) %>%
+  dplyr::select(-data) %>%
+  tidyr::unnest(fdr_data) %>%
+  dplyr::mutate(term_groupid = paste(term, groupId, sep = "_")) %>%
+  dplyr::mutate(imputed = dplyr::case_when(
+    term_groupid %in% df_imputed$term_groupid ~ "yes",
+    TRUE ~ "no"
+  )) %>%
+  select(-term_groupid) %>%
+  mutate(term = gsub("condition", "", term))
+
+volcano_width = 12
+volcano_height = 10*length(unique(lm_all$term))/4
+```
+
+## Volcano plots
+```{r volcano, fig.height=volcano_height, fig.width=volcano_width, message=FALSE}
+## add reference condition to lm table
+lm_all <- lm_all %>%
+  left_join(
+    metadata %>%
+      left_join(
+        metadata %>%
+          filter(ConditionNum %in% unique(ReferenceConditionNum)) %>%
+          select(condition, ConditionNum) %>%
+          distinct(ConditionNum, .keep_all = TRUE) %>%
+          dplyr::rename(reference = condition),
+        by = c("ReferenceConditionNum" = "ConditionNum")
+        ) %>%
+      select(condition, reference) %>%
+      distinct(condition, .keep_all = TRUE),
+    by = c("term" = "condition")
+    ) %>% 
+  relocate(reference, .after = term)
+
+## plot volcano
+plotly::ggplotly(clamshell::qqq_volcano_plot(lm_all, FDR_cutoff = 0.01) +
+                   facet_wrap(~term+reference, ncol=2, nrow = ceiling(length(unique(lm_all$term))/2), scales = "free", labeller = label_both) +
+                   regression_theme + 
+                   scale_y_continuous(expression("-log10 pvalue")))
+```
+
+## Heatmap
+```{r heatmap, dpi=100, fig.width = 12, fig.height = 12}
+## pivot data from long to wide
+data_heatmap <- complete_data %>%
+  select (compoundName, log2_abundance, SampleName) %>%
+  spread (key = SampleName, value = log2_abundance) %>%
+  remove_rownames() %>%
+  column_to_rownames(var = "compoundName")
+
+## row median normaliation
+data_heatmap_norm <- as.matrix(data_heatmap)
+
+for (row in rownames(data_heatmap_norm)) {
+  data_heatmap_norm[row, ] <- data_heatmap_norm[row, ] - median(data_heatmap_norm[row, ])
+  }
+
+zmin <- -2
+zmax <- 2
+
+heatmap_p <- plotly::as_widget(plotly::plot_ly(x=colnames(data_heatmap_norm),
+        y=rownames(data_heatmap_norm),
+        z = data_heatmap_norm,
+        type = "heatmap",
+        colorbar = list(
+    title = "median-normalized",
+    titleside = "right",
+    len = 0.2,
+    nticks = 5),
+    zmin = zmin,
+    zmax = zmax)) %>%
+  layout(
+    xaxis = list(
+    tickmode = "array",
+    tickfont = list(size = 5)  # Adjust the size of the x-axis text
+    ),
+    yaxis = list(
+    tickmode = "array",
+    tickfont = list(size = 5)  # Adjust the size of the y-axis text
+    ))
+
+heatmap_p
+```
+
+## Clustering
+```{r clustering, dpi=100, fig.height = heat_height, fig.width = heat_width}
+pheatmap(data_heatmap_norm, 
+         breaks = seq(from = -2, to = 2, length.out = 100),
+         main = experiment_number,
+         color = colorRampPalette(c("cyan1", "grey20", "gold1"))(100), angle_col = 90,
+         cluster_rows = TRUE,
+         cluster_cols = FALSE,
+         fontsize = 8)
+```
+
+## Box Plots
+```{r Box, fig.width = 10, fig.height = 420}
+## box plots of individual metabolites ordered by ascending ConditionNum
+box_data <- complete_data
+box_data <- with(box_data, box_data[order(compoundName),])
+
+box_p <-  plotly::as_widget(plotly::ggplotly(ggplot(data = box_data, mapping = aes(x=condition, y = log2_abundance)) +
+  geom_boxplot(aes(color = condition)) +
+  geom_point(size = 0.75) +
+  xlab("") + 
+  ylab("") +
+  box_theme + 
+  facet_wrap(~compoundName, ncol=2, nrow = ceiling(n_features/2), scales = "free", labeller = label_both) +
+  theme(strip.text = element_text(size = 10, face = "bold"),
+        strip.background = element_blank())
+  ))
+
+box_p
+```
+
+```{r Cytoscape, eval = FALSE}
+## find the condition with largest number of significant features in pairwise regression model
+temp <- lm_all %>%
+dplyr::filter(qvalue < 0.05) %>%
+dplyr::group_by(term) %>%
+tidyr::nest() %>%
+mutate(num_sig = map_dbl(data, nrow)) %>%
+ungroup() %>%
+filter(num_sig == max(num_sig)) %>%
+select(term)
+
+sig_cond <- gsub("condition", "", as.character(temp$term))
+sig_cond_num <- unique(metadata$ConditionNum[metadata$condition == sig_cond])
+sig_ref_cond_num <- unique(metadata$ReferenceConditionNum[metadata$condition == sig_cond])
+
+## generate wide table for the selected condition with log2(FC) and compoundName
+cytoscape_data <- clamshell::QQQ_mzroll_to_wide(PCA_tomic, sig_cond_num, sig_ref_cond_num) %>%
+  dplyr::rename(transitionName = compoundName)
+
+## map transition names to metabolomics DB names
+cytoscape_data <- left_join(
+  cytoscape_data, 
+  clamshell::PDB_compounds(mzrolldb_file_path) %>% 
+    select(name, category), by = c("transitionName" = "name"))
+
+cytoscape_data <- cytoscape_data %>%
+  dplyr::rename(compoundName = category) %>%
+  relocate(compoundName)
+
+cytoscape_metric <- colnames(cytoscape_data[grepl("log2", colnames(cytoscape_data))])
+
+## generate all Cytoscape networks for the selected log2(FC)
+## export networks as .PNG files
+network_names <- getNetworkList()
+
+network_names <- network_names[8]
+
+for (i in network_names) {
+  clamshell::cytoscape_plot_node_color (
+    cytoscape_data,
+    cytoscape_metric,
+    network_name = i,
+    axis_range = 3
+    )
+  fitContent(network = i)
+  file_path=paste(getwd(), paste(cytoscape_metric, i, sep = "_"), sep='/')
+  exportImage(file_path, 'PNG', zoom = 500, network = i)
+}
+
+
+temp_cytoscape_plot_node_color (
+  temp_data,
+  temp_db,
+  cytoscape_metric,
+  network_name = network_names,
+  metric_range = 3
+  )
+
+temp_analysis_pathway_enrichment (
+  temp_data, temp_db, ranking_metric = "log2_H2122NTC-Dox-6d_H2122UXS-Dox-6d"
+)
+
+temp_out <- temp_analysis_pathway_enrichment (
+  temp_data, temp_db, ranking_metric = "log2_H2122NTC-Dox-6d_H2122UXS-Dox-6d"
+)
+
+temp_out_tbl <- temp_out$enrichment_table
+
+```
+
+## Pathways
+```{r pathways, message = FALSE, warning = FALSE, results = "asis", out.width = "6000px", dpi=200}
+## Pathway representation for the condition with the highest number of significant changes in pairwise regression analysis
+files <- list.files(path = getwd(), 
+                    pattern = "log2.+png",
+                    full.names = TRUE)
+
+knitr::include_graphics(files)
+```
+
+```{r clean tables, message = FALSE, warning = FALSE}
+## empty column names in gsheet
+var_names <- colnames(metadata[grepl("\\.\\.\\.", colnames(metadata))])
+
+columns_remove <- c("smiles",	"adductName",	"tagString", "mz",	"rt",	"compoundDB",	"searchTableName",	"label",	"peak_label",	"method_tag",	"name",	"filename", "samples_tbl_row", "centered_log2_abundance", "group_sample_id",  var_names)
+
+## data in long-format
+table_long <- complete_data %>%
+select(-columns_remove)
+
+table_long <- table_long %>%
+mutate_at(vars(colnames(table_long %>% select(log2_abundance, median_log2_abundance))), ~ round(., 2))
+
+## data in wide-format
+table_wide <- table_long %>%
+select (compoundName, log2_abundance, SampleName) %>%
+spread (key = SampleName, value = log2_abundance) %>%
+column_to_rownames(var = "compoundName") %>%
+mutate(compoundName = rownames(.)) %>%
+relocate(compoundName)
+
+table_wide <- table_wide %>%
+mutate_at(vars(colnames(table_wide %>% select(-compoundName))), ~ round(., 2))
+
+## lm data
+table_lm <- lm_all %>%
+mutate_at(vars(estimate, std.error, statistics), ~ round(., 2)) %>%
+mutate(across(.cols = c(p.value, qvalue), .fns = ~ format(., scientific = TRUE, digits = 2)))
+```
+
+```{r datatable_with_buttons, message = FALSE, warning = FALSE}
+datatable_lm <- DT::datatable(
+table_lm,
+extensions = 'Buttons',
+options = list(
+dom = 'Bfrtip',
+buttons = list('csv')))
+
+datatable_long <- DT::datatable(
+table_long,
+extensions = 'Buttons',
+options = list(
+dom = 'Bfrtip',
+buttons = list('csv')))
+
+datatable_wide <- DT::datatable(
+table_wide,
+extensions = 'Buttons',
+options = list(
+dom = 'Bfrtip',
+buttons = list('csv')))
+```
+
+## Data tables
+```{r upload tables, message = FALSE, warning = FALSE}
+datatable_lm
+datatable_long
+datatable_wide
+```
+
+```{r write data to gsheet, eval = FALSE}
+## write data tables to experimental gsheet
+googlesheets4::sheet_write(table_lm, sheet_id, "regression_data")
+googlesheets4::sheet_write(table_wide, sheet_id, "LCMS_data_wide")
+googlesheets4::sheet_write(table_long, sheet_id, "LCMS_data_long")
+```
+
+## QC Standards
+```{r QC IS, dpi=200, fig.width = 5, fig.height = 7.5}
+## generate QC metadata from mzrolldb file names
+QC_mzroll <- claman::process_mzroll(
+  mzrolldb_file_path,
+  only_identified = TRUE,
+  validate = FALSE,
+  method_tag = "",
+  peakgroup_labels_to_keep = "q",
+  peakgroup_labels_to_exclude = "",
+  quant_col = "peakRank")
+
+QC_metadata <- QC_mzroll$samples %>%
+  mutate(SampleName = str_replace(name, ".mzML", "")) %>%
+  mutate(SampleName = gsub(".*M025A", "", SampleName)) %>%
+  filter(grepl("std030",SampleName)) %>%
+  select(sampleId, SampleName)
+
+## merge mzrolldb with QC metadata
+QC_merge <- claman::merge_samples_tbl(
+  mzroll_list = QC_mzroll,
+  samples_tbl = QC_metadata %>% select(-sampleId),
+  id_strings = c("SampleName"),
+  exact=FALSE)
+
+## only keep internal standards as a df
+QC_df <-romic::triple_to_tidy(QC_merge)$data %>%
+  filter(grepl("l", label)) %>%
+  mutate(SampleName = factor(SampleName, levels = unique(SampleName))) %>%
+  dplyr::rename(transitionName = compoundName) %>%
+  left_join(
+  clamshell::PDB_compounds(mzrolldb_file_path) %>% 
+    select(name, category), by = c("transitionName" = "name")) %>%
+  dplyr::rename(compoundName = category) %>%
+  relocate(compoundName, .after = groupId)
+
+## to control axes of the facet_wrapped graph below
+QC_sub <- QC_df %>%
+  as_tibble() %>%
+  group_by(compoundName) %>%
+  dplyr::summarize(limit_max = 2^max(log2_abundance)*1.2,
+                  limit_min = 2^min(log2_abundance)*0.8, 
+                  median = 2^median(log2_abundance),
+                  upper10 = median*1.1,
+                  upper20 = median*1.2,
+                  lower10 = median*0.9,
+                  lower20 = median*0.8,
+                  ) %>%
+  ungroup()
+
+## IS in blanks
+QC_blank <- QC_sub %>%
+  select(compoundName, limit_max, limit_min) %>%
+  pivot_longer(cols = -compoundName, names_to = "limit", values_to = "y") %>% 
+  mutate(x = QC_df$SampleName[1]) %>% 
+  select(-limit)
+
+## QC plot
+QC_p <-  plotly::as_widget(plotly::ggplotly(ggplot(data = QC_df, mapping = aes(x=SampleName, y = 2^log2_abundance)) +
+  geom_point(size = 3) +
+  geom_blank(data = QC_blank, aes(x=x, y=y)) + 
+  geom_hline(data = QC_sub, aes(yintercept = upper20), linetype = "dashed") +
+  geom_hline(data = QC_sub, aes(yintercept = upper10), linetype = "dotted") +
+  geom_hline(data = QC_sub, aes(yintercept = lower20), linetype = "dashed") +
+  geom_hline(data = QC_sub, aes(yintercept = lower10), linetype = "dotted") +
+  xlab("") + 
+  ylab("MS intensity") +
+  qc_theme + 
+  scale_y_continuous(labels = scientific) +
+  facet_wrap(~compoundName, ncol=2, scales="free_y") +
+  theme(strip.text = element_text(size = 13),
+        strip.background = element_blank())
+  ))
+
+QC_p
+```
