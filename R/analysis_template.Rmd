@@ -70,7 +70,7 @@ sheet_id <- ""
 sheet_url = paste("https://docs.google.com/spreadsheets/d/", as.character(sheet_id), sep = "")
 
 ## import metadata
-metadata <- import_metadata(pattern = experiment_number)
+metadata <- import_metadata(pattern = sheet_id)
 ```
 
 
@@ -342,7 +342,7 @@ heatmap_p
 ```{r clustering, dpi=100, fig.height = heat_height, fig.width = heat_width}
 pheatmap(data_heatmap_norm, 
          breaks = seq(from = -2, to = 2, length.out = 100),
-         main = experiment_number,
+         main = "",
          color = colorRampPalette(c("cyan1", "grey20", "gold1"))(100), angle_col = 90,
          cluster_rows = TRUE,
          cluster_cols = FALSE,
