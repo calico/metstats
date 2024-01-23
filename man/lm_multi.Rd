@@ -4,16 +4,16 @@
 \alias{lm_multi}
 \title{Linear regression for multiple conditions}
 \usage{
-lm_multi(feature_id, condition_nums, metadata, df)
+lm_multi(feature_id, ref_condition_nums, metadata, df)
 }
 \arguments{
 \item{feature_id:}{groupId(s) from mzrolldb}
 
-\item{condition_nums:}{ConditionNum(s) in metadata}
+\item{ref_condition_nums:}{RefConditionNum(s) in metadata}
 
-\item{metadata:}{metadata of experiment}
+\item{metadata:}{df of metadata}
 
-\item{df:}{dataframe in long format}
+\item{df:}{data in long format}
 }
 \value{
 one-row data from linear regression

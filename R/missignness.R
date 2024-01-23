@@ -7,25 +7,13 @@
 #'
 #'@return triple omic data with imputed missing peaks
 #'
-#' @examples
-#' library(dplyr)
-#'
-#' lod_values <- nplug_mzroll_augmented[["measurements"]] %>%
-#' dplyr::select(groupId, log2_abundance) %>%
-#' dplyr::distinct(groupId, .keep_all = TRUE)
-#'
-#' mzroll_list <- nplug_mzroll_augmented
-#' mzroll_list$measurements <- mzroll_list$measurements %>% filter(groupId != 2 & sampleId != 1)
-#'
-#' mzroll_list_imputed <- impute_missing_peaks(mzroll_list, lod_values, "log2_abundance", 0.15)
-#'
 #'@export
 impute_missing_peaks <- function(mzroll_list,
                                  lod_values,
                                  quant_var = "log2_abundance",
                                  imp_sd = 0.15) {
 
-  test_mzroll_list(mzroll_list)
+  claman::test_mzroll_list(mzroll_list)
 
   stopifnot(colnames(lod_values) %in% c("groupId", rlang::sym(quant_var)))
 
@@ -36,7 +24,7 @@ impute_missing_peaks <- function(mzroll_list,
   features <- mzroll_list$features %>% dplyr::select(groupId)
 
   if(!all(features$groupId %in% lod_values$groupId)) {
-    stop("groupId values of lod_value table and feature table of triple omic data must match")
+    stop("groupId values must match between lod_value df and feature table of triple omic data")
   }
 
   valid_quant_var <- setdiff(
@@ -76,15 +64,10 @@ impute_missing_peaks <- function(mzroll_list,
 
 #' Find comparisons that have at least one imputed value
 #'
-#'@param feature_id: groupId from mzrolldb
+#'@param feature_id: groupId for specific feature
 #'@param cond_num: ConditionNum in metadata
-#'@param metadata: metadata of experiment
-#'@param df: dataframe in long format
-#'
-#'@return dataframe of terms and groupIds for comparisons with imputed values
-#'
-#' @examples
-#' df_imputed <- imputed_comparisons(2, 3, metadata, df)
+#'@param metadata: df of metadata
+#'@param df: data in long format
 #'
 #'@export
 imputed_comparisons <- function(feature_id, cond_num, metadata, df) {
@@ -94,7 +77,9 @@ imputed_comparisons <- function(feature_id, cond_num, metadata, df) {
     groupId = factor(1),
     imputed = "no")
 
-  if (nrow(metadata %>% dplyr::filter(ConditionNum == cond_num)) < 2) {return(output)} else {
+  if (nrow(metadata %>% dplyr::filter(ConditionNum == cond_num)) < 2)
+    {return(output)}
+  else {
     ref_cond_num <- unique(metadata$ReferenceConditionNum[metadata$ConditionNum == cond_num])
     cond <- unique(metadata$condition[metadata$ConditionNum == cond_num])
     ref_cond <- unique(metadata$condition[metadata$ConditionNum == ref_cond_num])
@@ -110,11 +95,11 @@ imputed_comparisons <- function(feature_id, cond_num, metadata, df) {
         output$term = paste("condition", cond, sep = "")
         output$groupId = feature_id
         output$imputed = "yes"
+        }
       }
-    }
     return(output)
+    }
   }
-}
 
 #' Generate complete dataset upon imputing missing peaks
 #'
@@ -128,9 +113,14 @@ imputed_comparisons <- function(feature_id, cond_num, metadata, df) {
 #' list_complete_dataset <- purrr::map(1:5, ~generate_complete_dataset(mzrolldb_file_path, metadata))
 #'
 #'@export
-generate_complete_dataset <- function(mzrolldb_file_path, metadata) {
+generate_complete_dataset <- function(mzrolldb_file_path,
+                                      metadata,
+                                      lod_values) {
+
   ## process mzrolldb and only keep quant transitions
-  mzroll_process <- claman::process_mzroll(
+  ## TODO: filtering with "q" lable is specific to QQQ pipeline, cosnider generalize the code when this lable does not exist
+  ## TODO: similarly peakRank is specific to QQQ pipeline and needs to be generalized
+  mzroll_processed <- claman::process_mzroll(
     mzrolldb_file_path,
     only_identified = TRUE,
     validate = FALSE,
@@ -142,14 +132,14 @@ generate_complete_dataset <- function(mzrolldb_file_path, metadata) {
   ## merge metadata with mzroll
   ## impute missing peaks
   ## apply median polishing
-  mzroll_sheet_merge <- claman::merge_samples_tbl(
-    mzroll_list = mzroll_process,
+  mzroll_merged <- claman::merge_samples_tbl(
+    mzroll_list = mzroll_processed,
     samples_tbl = metadata,
     id_strings = c("SampleName"),
     exact=FALSE) %>%
     impute_missing_peaks(
-      quant_var = "log2_abundance",
-      mzrolldb_file_path = mzrolldb_file_path) %>%
+      lod_values = lod_values,
+      quant_var = "log2_abundance") %>%
     claman::normalize_peaks(
       normalization_method = "median polish",
       quant_peak_varname = "log2_abundance",
@@ -157,7 +147,7 @@ generate_complete_dataset <- function(mzrolldb_file_path, metadata) {
 
   ## get group and sample ids of missing peak
   temp_mzroll <- claman::merge_samples_tbl(
-    mzroll_list = mzroll_process,
+    mzroll_list = mzroll_processed,
     samples_tbl = metadata,
     id_strings = c("SampleName"),
     exact=FALSE)
@@ -165,14 +155,15 @@ generate_complete_dataset <- function(mzrolldb_file_path, metadata) {
   missing_peak_ids <- tidyr::expand_grid(
     groupId = temp_mzroll$features$groupId,
     sampleId = temp_mzroll$samples$sampleId) %>%
-    dplyr::anti_join (
+    dplyr::anti_join(
       temp_mzroll$measurements,
       by = c("groupId", "sampleId")) %>%
     dplyr::mutate(group_sample_id = paste(groupId, sampleId, sep = "_"))
 
+  ## TODO: filtering out internal standards with "l" lable is specific to QQQ pipeline, generalize the code when this lable does not exist
   ## generate dataframe from mzroll
   output <- as.data.frame(
-    romic::triple_to_tidy(mzroll_sheet_merge)$data %>%
+    romic::triple_to_tidy(mzroll_merged)$data %>%
       dplyr::filter(!grepl("l", label)) %>%
       dplyr::arrange(ConditionNum) %>%
       dplyr::mutate(condition = factor(condition, levels = unique(condition))) %>%

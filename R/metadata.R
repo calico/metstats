@@ -1,7 +1,9 @@
-#' Import metadata
+#' Import metadata from a Google Sheet
 #'
-#' @returns
-#'   a metadata table
+#'@param sheet_id: Google Sheet id
+#'
+#' @return
+#'   a dataframe of metadata
 #'
 #' @export
 import_metadata <- function(sheet_id) {

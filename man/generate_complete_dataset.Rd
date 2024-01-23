@@ -4,7 +4,7 @@
 \alias{generate_complete_dataset}
 \title{Generate complete dataset upon imputing missing peaks}
 \usage{
-generate_complete_dataset(mzrolldb_file_path, metadata)
+generate_complete_dataset(mzrolldb_file_path, metadata, lod_values)
 }
 \arguments{
 \item{mzrolldb_file_path:}{mzrolldb file path}

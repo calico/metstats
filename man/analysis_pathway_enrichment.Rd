@@ -7,25 +7,28 @@
 analysis_pathway_enrichment(
   data_input,
   id_mapping,
-  sets = NULL,
+  feature_sets = NULL,
   ranking_metric,
   metric_type = "non-abs",
   pval = 1
 )
 }
 \arguments{
-\item{sets}{path to the sets file that should have a standard GSEA .gmt file format, see the link below:
+\item{feature_sets}{path to the feature sets file that should have a standard GSEA .gmt file format, see the link below:
 https://software.broadinstitute.org/cancer/software/gsea/wiki/index.php/Data_formats
 for MSEA, this file is embedded within the package:
 "/metstats/inst/kegg_msea.txt"}
 
-\item{ranking_metric}{column name frominput data to be used as the metric for enrichment analysis}
+\item{ranking_metric}{column name from input data to be used as the metric for enrichment analysis}
 
 \item{metric_type}{type of the metric being used for enrichment analysis "abs" or "non-abs"}
 
 \item{pval}{pvalue threshold \link{DEFAULT = 1}}
 
-\item{data_input:}{dataframe of experimental data in wide format, must contain a column "id" and "ranking_metric" column}
+\item{data_input:}{dataframe of experimental data in wide format, must contain "feature_name" and "ranking_metric" columns}
+
+\item{id_mapping:}{dataframe with matching compound names and ids (such as kegg ids), ids should match with ids in feature_sets
+must contain "feature_name" and "id" columns}
 }
 \description{
 \if{html}{\out{<div class="sourceCode">}}\preformatted{  Pathway Enrichment Analysis

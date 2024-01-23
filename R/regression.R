@@ -1,4 +1,5 @@
-#' Pairwise linear regression for one feature and one condition
+#' Pairwise linear regression for one feature and one reference condition
+#' This will perform regression for all conditions that have the same reference condition simultaneously
 #'
 #'@param feature_id: groupId from mzrolldb
 #'@param cond_num: ConditionNum in metadata
@@ -12,7 +13,7 @@
 #' list_complete_dataset <- purrr::map(1:5, ~generate_complete_dataset(mzrolldb_file_path, metadata))
 #'
 #'@export
-lm <- function(feature_id, ref_cond_num, metadata, df) {
+lm_feature <- function(feature_id, ref_cond_num, metadata, df) {
 
   cond_nums <- metadata %>%
     dplyr::filter(ReferenceConditionNum == ref_cond_num & ConditionNum != ref_cond_num) %>%
@@ -62,7 +63,7 @@ lm <- function(feature_id, ref_cond_num, metadata, df) {
       dplyr::filter(groupId == feature_id)
 
     ## linear regression
-    output <- with(data_temp , lm(log2_abundance ~ condition))
+    output <- with(data_temp , stats::lm(log2_abundance ~ condition))
     return(output)
   }
 }
@@ -70,9 +71,9 @@ lm <- function(feature_id, ref_cond_num, metadata, df) {
 #' Linear regression for multiple conditions
 #'
 #'@param feature_id: groupId(s) from mzrolldb
-#'@param condition_nums: ConditionNum(s) in metadata
-#'@param metadata: metadata of experiment
-#'@param df: dataframe in long format
+#'@param ref_condition_nums: RefConditionNum(s) in metadata
+#'@param metadata: df of metadata
+#'@param df: data in long format
 #'
 #'@return one-row data from linear regression
 #'
@@ -80,10 +81,10 @@ lm <- function(feature_id, ref_cond_num, metadata, df) {
 #' lm_all <- purrr::map(feature_ids, ~lm_all(.x, ref_ids, metadata, complete_data))
 #'
 #'@export
-lm_multi <- function(feature_id, condition_nums, metadata, df) {
+lm_multi <- function(feature_id, ref_condition_nums, metadata, df) {
   output <- data.frame()
-  for (i in condition_nums) {
-    lm_list <- lm(feature_id, i, metadata, df)
+  for (i in ref_condition_nums) {
+    lm_list <- lm_feature(feature_id, i, metadata, df)
     if(!is.null(lm_list)) {
       output <- rbind(
         output,
@@ -102,7 +103,7 @@ lm_multi <- function(feature_id, condition_nums, metadata, df) {
 #' Pooled results for linear regression of one feature and all pairwise comparisons upon multiple imputation of missing peaks
 #'
 #'@param feature_id: groupId(s) from mzrolldb
-#'@param condition_nums: ConditionNum(s) in metadata
+#'@param ref_condition_nums: RefConditionNum(s) in metadata
 #'@param metadata: metadata of experiment
 #'@param df_list: list of complete dataframes upon imputing missing peaks
 #'
@@ -112,7 +113,7 @@ lm_multi <- function(feature_id, condition_nums, metadata, df) {
 #' lm_pooled <- lm_pool(2, c(1,2,3), metadata, df_list)
 #'
 #'@export
-lm_pool <- function(feature_id, condition_nums, metadata, df_list) {
+lm_pool <- function(feature_id, ref_condition_nums, metadata, df_list) {
   lm_temp <- data.frame(
     term = character(),
     estimate = numeric(),
@@ -120,8 +121,8 @@ lm_pool <- function(feature_id, condition_nums, metadata, df_list) {
     statistics = numeric(),
     df = numeric(),
     p.value = numeric())
-  for (i in condition_nums) {
-    imputation_list <- purrr::map(df_list, ~lm(feature_id, i, metadata, .x))
+  for (i in ref_condition_nums) {
+    imputation_list <- purrr::map(df_list, ~lm_feature(feature_id, i, metadata, .x))
 
     if(!is.null(imputation_list[[1]])) {
       lm_temp <- rbind(
@@ -135,7 +136,7 @@ lm_pool <- function(feature_id, condition_nums, metadata, df_list) {
   return(lm_temp)
 }
 
-#' Find qvalues
+#' Calculate qvalues
 #'
 #'@param term_data: dataframe of linear regression conataining p.value
 #'

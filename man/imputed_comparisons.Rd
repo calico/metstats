@@ -7,21 +7,14 @@
 imputed_comparisons(feature_id, cond_num, metadata, df)
 }
 \arguments{
-\item{feature_id:}{groupId from mzrolldb}
+\item{feature_id:}{groupId for specific feature}
 
 \item{cond_num:}{ConditionNum in metadata}
 
-\item{metadata:}{metadata of experiment}
+\item{metadata:}{df of metadata}
 
-\item{df:}{dataframe in long format}
-}
-\value{
-dataframe of terms and groupIds for comparisons with imputed values
+\item{df:}{data in long format}
 }
 \description{
 Find comparisons that have at least one imputed value
-}
-\examples{
-df_imputed <- imputed_comparisons(2, 3, metadata, df)
-
 }

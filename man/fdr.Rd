@@ -2,7 +2,7 @@
 % Please edit documentation in R/regression.R
 \name{fdr}
 \alias{fdr}
-\title{Find qvalues}
+\title{Calculate qvalues}
 \usage{
 fdr(term_data)
 }
@@ -13,7 +13,7 @@ fdr(term_data)
 dataframe of linear regression with qvalues added
 }
 \description{
-Find qvalues
+Calculate qvalues
 }
 \examples{
 lm_fdr <- fdr(lm_data)

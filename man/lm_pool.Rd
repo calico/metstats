@@ -4,12 +4,12 @@
 \alias{lm_pool}
 \title{Pooled results for linear regression of one feature and all pairwise comparisons upon multiple imputation of missing peaks}
 \usage{
-lm_pool(feature_id, condition_nums, metadata, df_list)
+lm_pool(feature_id, ref_condition_nums, metadata, df_list)
 }
 \arguments{
 \item{feature_id:}{groupId(s) from mzrolldb}
 
-\item{condition_nums:}{ConditionNum(s) in metadata}
+\item{ref_condition_nums:}{RefConditionNum(s) in metadata}
 
 \item{metadata:}{metadata of experiment}
 
