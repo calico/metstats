@@ -2,7 +2,7 @@
 #'
 #'@param mzroll_list: data in triple omic structure
 #'@param lod_values: a tibble that maps groupId to log2 feature-level imputation values
-#' if a tibble is not provided, min measurement per feature will be used as imputation values
+#' if a tibble is not provided, half min value per feature will be used as imputation values
 #'@param quant_var: column to use for peak values, the function performs imputation in log2 space, peak quant values must be in log2 space
 #'@param imp_sd: standard deviation of Gaussian distribution to use for missing peak imputation
 #'
@@ -16,11 +16,11 @@ impute_missing_peaks <- function(mzroll_list,
 
   claman::test_mzroll_list(mzroll_list)
 
-  ##  get min measurement per feature to use for imputation if feature-specific imputation values are not provided
+  ##  get half min value per feature to use for imputation if feature-specific imputation values are not provided
   if(is.null(lod_values)) {
     lod_values <- mzroll_list$measurements %>%
       group_by(groupId) %>%
-      filter(!!rlang::sym(quant_var) == min(!!rlang::sym(quant_var))) %>%
+      filter(!!rlang::sym(quant_var) == min(!!rlang::sym(quant_var))/2) %>%
       ungroup() %>%
       select(groupId, !!rlang::sym(quant_var))
   }
@@ -28,7 +28,7 @@ impute_missing_peaks <- function(mzroll_list,
   ## check that required columns are present in the imputation tibble
   stopifnot(colnames(lod_values) %in% c("groupId", rlang::sym(quant_var)))
 
-  ## check if imputation value is qnique per feature
+  ## check if imputation value is unique per feature
   if (nrow(lod_values) > nrow(lod_values %>% dplyr::distinct(groupId, .keep_all = TRUE))) {
     stop("only one value per feature must be provided to impute missing peaks")
   }
