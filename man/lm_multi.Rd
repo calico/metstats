@@ -4,24 +4,22 @@
 \alias{lm_multi}
 \title{Linear regression for multiple conditions}
 \usage{
-lm_multi(feature_id, ref_condition_nums, metadata, df)
+lm_multi(feature_id, ref_conds, metadata, df, quant_var = "log2_abundance")
 }
 \arguments{
-\item{feature_id:}{groupId(s) from mzrolldb}
+\item{feature_id}{groupId(s) from mzrolldb}
 
-\item{ref_condition_nums:}{RefConditionNum(s) in metadata}
+\item{ref_conds}{RefCondition(s) in metadata}
 
-\item{metadata:}{df of metadata}
+\item{metadata}{metadata of experiment}
 
-\item{df:}{data in long format}
+\item{df}{dataframe in long format}
+
+\item{quant_var}{string of quant variable to be used for lm}
 }
 \value{
 one-row data from linear regression
 }
 \description{
 Linear regression for multiple conditions
-}
-\examples{
-lm_all <- purrr::map(feature_ids, ~lm_all(.x, ref_ids, metadata, complete_data))
-
 }

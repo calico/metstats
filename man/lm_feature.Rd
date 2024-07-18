@@ -5,16 +5,18 @@
 \title{Pairwise linear regression for one feature and one reference condition
 This will perform regression for all conditions that have the same reference condition simultaneously}
 \usage{
-lm_feature(feature_id, ref_cond_num, metadata, df)
+lm_feature(feature_id, ref_cond, metadata, df, quant_var = "log2_abundance")
 }
 \arguments{
-\item{feature_id:}{groupId from mzrolldb}
+\item{feature_id}{groupId from mzrolldb}
 
-\item{cond_num:}{ConditionNum in metadata}
+\item{ref_cond}{RefCondition in metadata}
 
-\item{metadata:}{metadata of experiment}
+\item{metadata}{metadata of experiment}
 
-\item{df:}{dataframe in long format}
+\item{df}{dataframe in long format}
+
+\item{quant_var}{string of quant variable to be used for lm}
 }
 \value{
 one-row data from linear regression
@@ -22,9 +24,4 @@ one-row data from linear regression
 \description{
 Pairwise linear regression for one feature and one reference condition
 This will perform regression for all conditions that have the same reference condition simultaneously
-}
-\examples{
-complete_dataset <- generate_complete_dataset(mzrolldb_file_path, metadata)
-list_complete_dataset <- purrr::map(1:5, ~generate_complete_dataset(mzrolldb_file_path, metadata))
-
 }

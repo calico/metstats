@@ -4,16 +4,19 @@
 \alias{imputed_comparisons}
 \title{Find comparisons that have at least one imputed value}
 \usage{
-imputed_comparisons(feature_id, cond_num, metadata, df)
+imputed_comparisons(feature_id, cond, metadata, df)
 }
 \arguments{
-\item{feature_id:}{groupId for specific feature}
+\item{feature_id}{groupId from mzrolldb}
 
-\item{cond_num:}{ConditionNum in metadata}
+\item{cond}{Condition in metadata}
 
-\item{metadata:}{df of metadata}
+\item{metadata}{metadata of experiment}
 
-\item{df:}{data in long format}
+\item{df}{dataframe in long format}
+}
+\value{
+dataframe of terms and groupIds for comparisons with imputed values
 }
 \description{
 Find comparisons that have at least one imputed value

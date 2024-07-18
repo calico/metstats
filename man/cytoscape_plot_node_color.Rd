@@ -7,7 +7,7 @@
 cytoscape_plot_node_color(
   data_input,
   id_mapping,
-  vis_metric,
+  metric,
   network_name = NULL,
   metric_range = 4
 )
@@ -15,7 +15,9 @@ cytoscape_plot_node_color(
 \arguments{
 \item{data_input}{dataframe of merged Cytoscape table of nodes with experimental data}
 
-\item{vis_metric}{name of the metric to visualize}
+\item{id_mapping}{dataframe of merged Cytoscape table of nodes with experimental data}
+
+\item{metric}{name of the metric to visualize}
 
 \item{network_name}{name of the network in Cytoscape}
 

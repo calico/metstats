@@ -7,7 +7,7 @@
 generate_complete_dataset(mzroll_list, metadata, lod_values)
 }
 \arguments{
-\item{mzroll_list:}{data in triple omic structure that's already filtered to only keep peakgroups of interest}
+\item{mzroll_list:}{data in triple omic structure that's processed with claman::process_mzroll, samples table of mzroll_list must contain a numeric InjOrder column}
 
 \item{metadata:}{metadata of experiment}
 
@@ -18,9 +18,4 @@ dataframe of complete dataset
 }
 \description{
 Generate complete dataset upon imputing missing peaks
-}
-\examples{
-complete_dataset <- generate_complete_dataset(mzrolldb_file_path, metadata)
-list_complete_dataset <- purrr::map(1:5, ~generate_complete_dataset(mzrolldb_file_path, metadata))
-
 }

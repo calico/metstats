@@ -15,7 +15,3 @@ dataframe of linear regression with qvalues added
 \description{
 Calculate qvalues
 }
-\examples{
-lm_fdr <- fdr(lm_data)
-
-}

@@ -8,18 +8,18 @@ impute_missing_peaks(
   mzroll_list,
   lod_values = NULL,
   quant_var = "log2_abundance",
-  imp_sd = 0.15
+  imputation_sd = 0.15
 )
 }
 \arguments{
 \item{mzroll_list:}{data in triple omic structure}
 
-\item{lod_values:}{a tibble that maps groupId to log2 feature-level imputation values
+\item{lod_values:}{a tibble that maps groupId to feature-level imputation values
 if a tibble is not provided, half min value per feature will be used as imputation values}
 
 \item{quant_var:}{column to use for peak values, the function performs imputation in log2 space, peak quant values must be in log2 space}
 
-\item{imp_sd:}{standard deviation of Gaussian distribution to use for missing peak imputation}
+\item{imputation_sd:}{standard deviation of Gaussian distribution to use for missing peak imputation}
 }
 \value{
 triple omic data with imputed missing peaks
