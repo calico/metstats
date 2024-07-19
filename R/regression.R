@@ -1,90 +1,91 @@
 #' Pairwise linear regression for one feature and one reference condition
 #' This will perform regression for all conditions that have the same reference condition simultaneously
 #'
-#'@param feature_id: groupId from mzrolldb
-#'@param cond_num: ConditionNum in metadata
-#'@param metadata: metadata of experiment
-#'@param df: dataframe in long format
+#'@param feature_id groupId from mzrolldb
+#'@param ref_cond RefCondition in metadata
+#'@param metadata metadata of experiment
+#'@param df dataframe in long format
+#'@param quant_var string of quant variable to be used for lm
 #'
 #'@return one-row data from linear regression
 #'
-#' @examples
-#' complete_dataset <- generate_complete_dataset(mzrolldb_file_path, metadata)
-#' list_complete_dataset <- purrr::map(1:5, ~generate_complete_dataset(mzrolldb_file_path, metadata))
-#'
 #'@export
-lm_feature <- function(feature_id, ref_cond_num, metadata, df) {
+lm_feature <- function(feature_id,
+                       ref_cond,
+                       metadata,
+                       df,
+                       quant_var = "log2_abundance") {
 
-  cond_nums <- metadata %>%
-    dplyr::filter(ReferenceConditionNum == ref_cond_num & ConditionNum != ref_cond_num) %>%
-    dplyr::select(ConditionNum) %>%
-    dplyr::group_by(ConditionNum) %>%
-    dplyr::filter(dplyr::n() > 1) %>%
+  conds <- metadata %>%
+    dplyr::filter(RefCondition == ref_cond & Condition != ref_cond) %>%
+    dplyr::select(Condition) %>%
+    dplyr::group_by(Condition) %>%
+    dplyr::filter(n() > 1) %>%
     unique() %>%
-    unlist() %>%
-    as.numeric()
+    unlist()
 
   ## skip regression analysis if there is less than two sample left
-  if (nrow(metadata %>% dplyr::filter(ConditionNum %in% cond_nums)) < 2) {return(NULL)} else {
+  if (nrow(metadata %>% filter(Condition %in% conds)) < 2) {return(NULL)} else {
 
     ref_cond <- metadata %>%
-      dplyr::filter(ConditionNum == ref_cond_num) %>%
-      dplyr::select(condition) %>%
+      dplyr::filter(Condition == ref_cond) %>%
+      dplyr::select(Condition) %>%
       unique() %>%
       unlist() %>%
       as.character()
 
     conds <- metadata %>%
-      dplyr::filter(ConditionNum %in% cond_nums) %>%
-      dplyr::select(condition) %>%
+      dplyr::filter(Condition %in% conds) %>%
+      dplyr::select(Condition) %>%
       unique() %>%
       unlist() %>%
       as.character()
 
     ## subset data
     data_temp <- df %>%
-      dplyr::filter(ConditionNum %in% c(cond_nums, ref_cond_num)) %>%
-      dplyr::mutate(condition = factor(condition, levels = c(
+      dplyr::filter(Condition %in% c(conds, ref_cond)) %>%
+      dplyr::mutate(Condition = factor(Condition, levels = c(
         metadata %>%
-          dplyr::filter(ConditionNum == ref_cond_num) %>%
-          dplyr::select(condition) %>%
+          dplyr::filter(Condition == ref_cond) %>%
+          dplyr::select(Condition) %>%
           unique() %>%
           unlist() %>%
           as.character(),
         metadata %>%
-          dplyr::filter(ConditionNum %in% cond_nums) %>%
-          dplyr::select(condition) %>%
+          dplyr::filter(Condition %in% conds) %>%
+          dplyr::select(Condition) %>%
           unique() %>%
           unlist() %>%
           as.character()
-      )
-      )
-      ) %>%
-      dplyr::filter(groupId == feature_id)
+        )
+        )
+        ) %>%
+      dplyr:: filter(groupId == feature_id)
 
     ## linear regression
-    output <- with(data_temp , stats::lm(log2_abundance ~ condition))
+    output <- with(data_temp , lm(stats::as.formula(paste(quant_var, "~", "Condition"))))
     return(output)
   }
 }
 
 #' Linear regression for multiple conditions
 #'
-#'@param feature_id: groupId(s) from mzrolldb
-#'@param ref_condition_nums: RefConditionNum(s) in metadata
-#'@param metadata: df of metadata
-#'@param df: data in long format
+#'@param feature_id groupId(s) from mzrolldb
+#'@param ref_conds RefCondition(s) in metadata
+#'@param metadata metadata of experiment
+#'@param df dataframe in long format
+#'@param quant_var string of quant variable to be used for lm
 #'
 #'@return one-row data from linear regression
 #'
-#' @examples
-#' lm_all <- purrr::map(feature_ids, ~lm_all(.x, ref_ids, metadata, complete_data))
-#'
-#'@export
-lm_multi <- function(feature_id, ref_condition_nums, metadata, df) {
+lm_multi <- function(feature_id,
+                     ref_conds,
+                     metadata,
+                     df,
+                     quant_var = "log2_abundance") {
   output <- data.frame()
-  for (i in ref_condition_nums) {
-    lm_list <- lm_feature(feature_id, i, metadata, df)
+  for (i in ref_conds) {
+    lm_list <- lm_feature(feature_id, i, metadata, df, quant_var)
     if(!is.null(lm_list)) {
       output <- rbind(
         output,
@@ -102,18 +103,20 @@ lm_multi <- function(feature_id, ref_condition_nums, metadata, df) {
 
 #' Pooled results for linear regression of one feature and all pairwise comparisons upon multiple imputation of missing peaks
 #'
-#'@param feature_id: groupId(s) from mzrolldb
-#'@param ref_condition_nums: RefConditionNum(s) in metadata
-#'@param metadata: metadata of experiment
-#'@param df_list: list of complete dataframes upon imputing missing peaks
+#'@param feature_id groupId(s) from mzrolldb
+#'@param conds Condition(s) in metadata
+#'@param metadata metadata of experiment
+#'@param df_list list of complete dataframes upon imputing missing peaks
+#'@param quant_var string of quant variable to be used for lm
 #'
 #'@return dataframe of linear regression summary for one feature and all pairwise comparisons
 #'
-#' @examples
-#' lm_pooled <- lm_pool(2, c(1,2,3), metadata, df_list)
-#'
 #'@export
-lm_pool <- function(feature_id, ref_condition_nums, metadata, df_list) {
+qqq_lm_pool <- function(feature_id,
+                        conds,
+                        metadata,
+                        df_list,
+                        quant_var = "log2_abundance") {
   lm_temp <- data.frame(
     term = character(),
     estimate = numeric(),
@@ -121,8 +124,8 @@ lm_pool <- function(feature_id, ref_condition_nums, metadata, df_list) {
     statistics = numeric(),
     df = numeric(),
     p.value = numeric())
-  for (i in ref_condition_nums) {
-    imputation_list <- purrr::map(df_list, ~lm_feature(feature_id, i, metadata, .x))
+  for (i in conds) {
+    imputation_list <- purrr::map(df_list, ~qqq_lm(feature_id, i, metadata, .x, quant_var))
 
     if(!is.null(imputation_list[[1]])) {
       lm_temp <- rbind(
@@ -141,9 +144,6 @@ lm_pool <- function(feature_id, ref_condition_nums, metadata, df_list) {
 #'@param term_data: dataframe of linear regression conataining p.value
 #'
 #'@return dataframe of linear regression with qvalues added
-#'
-#' @examples
-#' lm_fdr <- fdr(lm_data)
 #'
 #'@export
 fdr <- function(term_data) {
