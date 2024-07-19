@@ -139,8 +139,7 @@ cytoscape_mutate_network <- function(network_name = NULL) {
 #' Visualizing a metric with node color. This functions works well for a comparison of two conditions e.g. log2(treatment/control).
 #'
 #' @param data_input dataframe of merged Cytoscape table of nodes with experimental data
-#' @param id_mapping dataframe of merged Cytoscape table of nodes with experimental data
-#' @param metric name of the metric to visualize
+#' @param vis_metric name of the metric to visualize
 #' @param network_name name of the network in Cytoscape
 #' @param metric_range range of data for plotting
 #'
@@ -149,7 +148,7 @@ cytoscape_mutate_network <- function(network_name = NULL) {
 #' @export
 cytoscape_plot_node_color <- function(data_input,
                                       id_mapping,
-                                      metric,
+                                      vis_metric,
                                       network_name = NULL,
                                       metric_range = 4) {
 
@@ -163,6 +162,9 @@ cytoscape_plot_node_color <- function(data_input,
     stop("input data input must be a data frame")
   }
 
+  all_columns_exist <- all(c("feature_name", "short_name", "id") %in% colnames(id_mapping))
+
+
   ## check if the id_mapping is dataframe and has 'feature_name' , 'short_name' and 'id' columns
   if (any(class(id_mapping) == "data.frame")) {
     if (!all(c("feature_name", "short_name", "id") %in% colnames(id_mapping))) {
@@ -174,26 +176,22 @@ cytoscape_plot_node_color <- function(data_input,
 
   ## only keep the metric of interest in the data_input
   data_input <- data_input %>%
-    dplyr::select("feature_name", metric)
+    dplyr::select("feature_name", vis_metric)
 
-  ## check if the input metric is numeric
-  if (class(data_input[[metric]]) != "numeric") {
-    stop(paste0("visualization metric must be numeric class\nmetric: ",
-                metric, "\nclass: ",
-                class(data_input[[metric]]))
+  ## check if the input vis_metric is numeric
+  if (class(data_input[[vis_metric]]) != "numeric") {
+    stop(paste0("visualization metric must be numeric class\nvis_metric: ",
+                vis_metric, "\nclass: ",
+                class(data_input[[vis_metric]]))
          )
     }
 
   ## merge data_input with id_mapping to pull KEGG IDs
   if (!"id" %in% colnames(data_input)) {
-    data_input <- dplyr::left_join(
-      data_input %>%
-        dplyr::mutate(
-          feature_name = tolower(feature_name)),
-      id_mapping %>%
-        dplyr::select(feature_name, short_name, id) %>%
-        dplyr::mutate(feature_name = tolower(feature_name)),
-      by = "feature_name")
+    data_input <- dplyr::left_join(data_input %>%
+                              dplyr::mutate(feature_name = tolower(feature_name)),
+                            id_mapping %>% dplyr::select(feature_name, short_name, id) %>%
+                              dplyr::mutate(feature_name = tolower(feature_name)), by = "feature_name")
     }
 
   ## reset network layout to default
@@ -237,7 +235,8 @@ cytoscape_plot_node_color <- function(data_input,
     }
 
   ## add legend for the plot
-  data_nodes_mut$node_name[data_nodes_mut$KEGG_NODE_LABEL == "Legend"] <- metric
+  data_nodes_mut$node_name[data_nodes_mut$KEGG_NODE_LABEL == "Legend"] <- vis_metric
+
 
   ## load experimental data to Cytoscape
   RCy3::loadTableData(
@@ -266,7 +265,7 @@ cytoscape_plot_node_color <- function(data_input,
 
   ## function to visualize a metric with node color
   RCy3::setNodeColorMapping(
-    metric,
+    vis_metric,
     table.column.values = c(-metric_range, 0, metric_range),
     colors = c('#0000FF','#FFFFFF','#FF3333'), #blue-white-red color scale for negative-zero-positive values
     mapping.type = "c",
