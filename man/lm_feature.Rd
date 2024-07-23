@@ -2,8 +2,7 @@
 % Please edit documentation in R/regression.R
 \name{lm_feature}
 \alias{lm_feature}
-\title{Pairwise linear regression for one feature and one reference condition
-This will perform regression for all conditions that have the same reference condition simultaneously}
+\title{Pairwise linear regression}
 \usage{
 lm_feature(feature_id, ref_cond, metadata, df, quant_var = "log2_abundance")
 }
@@ -22,6 +21,5 @@ lm_feature(feature_id, ref_cond, metadata, df, quant_var = "log2_abundance")
 one-row data from linear regression
 }
 \description{
-Pairwise linear regression for one feature and one reference condition
-This will perform regression for all conditions that have the same reference condition simultaneously
+This function will perform one-feature regression for all conditions that have the same reference condition
 }

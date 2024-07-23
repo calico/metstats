@@ -2,7 +2,7 @@
 % Please edit documentation in R/regression.R
 \name{lm_pool}
 \alias{lm_pool}
-\title{Pooled results for linear regression of one feature and all pairwise comparisons upon multiple imputation of missing peaks}
+\title{Pooled results for linear regression}
 \usage{
 lm_pool(feature_id, conds, metadata, df_list, quant_var = "log2_abundance")
 }
@@ -21,5 +21,5 @@ lm_pool(feature_id, conds, metadata, df_list, quant_var = "log2_abundance")
 dataframe of linear regression summary for one feature and all pairwise comparisons
 }
 \description{
-Pooled results for linear regression of one feature and all pairwise comparisons upon multiple imputation of missing peaks
+pooling regression results from multiple imputation of missing peaks
 }
