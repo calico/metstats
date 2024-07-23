@@ -1,5 +1,7 @@
-#' Pairwise linear regression for one feature and one reference condition
-#' This will perform regression for all conditions that have the same reference condition simultaneously
+#' Pairwise linear regression
+#'
+#' @description
+#' This function will perform one-feature regression for all conditions that have the same reference condition
 #'
 #'@param feature_id groupId from mzrolldb
 #'@param ref_cond RefCondition in metadata
@@ -78,6 +80,7 @@ lm_feature <- function(feature_id,
 #'
 #'@return one-row data from linear regression
 #'
+#'@export
 lm_multi <- function(feature_id,
                      ref_conds,
                      metadata,
@@ -101,7 +104,9 @@ lm_multi <- function(feature_id,
   return(output)
 }
 
-#' Pooled results for linear regression of one feature and all pairwise comparisons upon multiple imputation of missing peaks
+#' Pooled results for linear regression
+#'
+#' @description pooling regression results from multiple imputation of missing peaks
 #'
 #'@param feature_id groupId(s) from mzrolldb
 #'@param conds Condition(s) in metadata
@@ -112,7 +117,7 @@ lm_multi <- function(feature_id,
 #'@return dataframe of linear regression summary for one feature and all pairwise comparisons
 #'
 #'@export
-qqq_lm_pool <- function(feature_id,
+lm_pool <- function(feature_id,
                         conds,
                         metadata,
                         df_list,

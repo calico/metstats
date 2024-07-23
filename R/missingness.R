@@ -1,4 +1,6 @@
-#' Impute missing peaks with provided feature-level imputation values
+#' Missing value imputation
+#'
+#'@description impute missing peaks with provided feature-level imputation values
 #'
 #'@param mzroll_list: data in triple omic structure
 #'@param lod_values: a tibble that maps groupId to feature-level imputation values
@@ -113,7 +115,7 @@ imputed_comparisons <- function(feature_id,
     }
   }
 
-#' Generate complete dataset upon imputing missing peaks
+#' Generate complete dataset upon imputing missing values
 #'
 #'@param mzroll_list: data in triple omic structure that's processed with claman::process_mzroll, samples table of mzroll_list must contain a numeric InjOrder column
 #'@param metadata: metadata of experiment

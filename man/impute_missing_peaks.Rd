@@ -2,7 +2,7 @@
 % Please edit documentation in R/missingness.R
 \name{impute_missing_peaks}
 \alias{impute_missing_peaks}
-\title{Impute missing peaks with provided feature-level imputation values}
+\title{Missing value imputation}
 \usage{
 impute_missing_peaks(
   mzroll_list,
@@ -25,5 +25,5 @@ if a tibble is not provided, half min value per feature will be used as imputati
 triple omic data with imputed missing peaks
 }
 \description{
-Impute missing peaks with provided feature-level imputation values
+impute missing peaks with provided feature-level imputation values
 }

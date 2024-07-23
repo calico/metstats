@@ -2,7 +2,7 @@
 % Please edit documentation in R/missingness.R
 \name{generate_complete_dataset}
 \alias{generate_complete_dataset}
-\title{Generate complete dataset upon imputing missing peaks}
+\title{Generate complete dataset upon imputing missing values}
 \usage{
 generate_complete_dataset(mzroll_list, metadata, lod_values)
 }
@@ -17,5 +17,5 @@ generate_complete_dataset(mzroll_list, metadata, lod_values)
 dataframe of complete dataset
 }
 \description{
-Generate complete dataset upon imputing missing peaks
+Generate complete dataset upon imputing missing values
 }
