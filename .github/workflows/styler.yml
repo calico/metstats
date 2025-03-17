@@ -1,0 +1,13 @@
+name: R-styler-formatter
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "/R/"
+
+jobs:
+  run-syler:
+    name: Check styler formatting
+    uses: calico/calico-github-actions/.github/workflows/r-style.yml@main
+    secrets: inherit
